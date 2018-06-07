@@ -132,7 +132,6 @@ module RackReverseProxy
         @rackreq = rackreq
 
         @headers = headers if accept_headers
-        @spec_arity = spec.method(spec_match_method_name).arity
       end
 
       def any?
@@ -164,7 +163,7 @@ module RackReverseProxy
 
       private
 
-      attr_reader :spec, :url, :path, :headers, :rackreq, :spec_arity, :has_custom_url
+      attr_reader :spec, :url, :path, :headers, :rackreq, :has_custom_url
 
       def found
         @_found ||= find_matches
@@ -193,13 +192,19 @@ module RackReverseProxy
       end
 
       def _spec_param_count
-        return 1 if spec_arity == -1
-        spec_arity
+        if spec.respond_to?(:arity)
+          spec.arity
+        else
+          spec.method(spec_match_method_name).arity
+        end
       end
 
       def spec_match_method_name
-        return :match if spec.respond_to?(:match)
-        :call
+        if spec.respond_to?(:match)
+          :match
+        else
+          :call
+        end
       end
     end
   end
